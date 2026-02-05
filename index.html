@@ -1,0 +1,2965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management System - Complete Agent & Branch Setup</title>
+    
+    <!-- Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --danger: #ff0054;
+            --info: #4895ef;
+            --manager: #06d6a0;
+            --dark: #212529;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+            --text-gray: #6c757d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--dark);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(90deg, var(--dark) 0%, #343a40 100%);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        header .version {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        /* Login Screen */
+        #loginScreen {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin: 50px auto;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        #loginScreen h2 {
+            color: var(--dark);
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+        }
+
+        .login-icon {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .code-note {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .login-message {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .login-message.error {
+            background: rgba(255, 0, 84, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            display: block;
+        }
+
+        .login-message.success {
+            background: rgba(76, 201, 240, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+            display: block;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .user-details h3 {
+            font-size: 1.3rem;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .user-role {
+            background: var(--manager);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .user-role.agent {
+            background: var(--info);
+        }
+
+        .user-role.admin {
+            background: var(--warning);
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+
+        /* Follow-up Alert */
+        .followup-alert {
+            background: linear-gradient(45deg, var(--warning), var(--danger));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(247, 37, 133, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, var(--success), #38b000);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, var(--danger), #d00000);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-manager {
+            background: linear-gradient(45deg, var(--manager), #06a884);
+            color: white;
+        }
+
+        .btn-admin {
+            background: linear-gradient(45deg, var(--warning), #e63946);
+            color: white;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            padding: 20px;
+            background: linear-gradient(90deg, #f8f9fa, #e9ecef);
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-header h3 {
+            margin: 0;
+            color: var(--dark);
+            font-size: 1.2rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filters input,
+        .filters select {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            min-width: 150px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--dark);
+            border-bottom: 2px solid var(--border);
+            background: #f8f9fa;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .status-pending { background: rgba(251, 191, 36, 0.15); color: #d97706; }
+        .status-delivered { background: rgba(76, 201, 240, 0.15); color: #0891b2; }
+        .status-delayed { background: rgba(247, 37, 133, 0.15); color: #be185d; }
+        .status-cancelled { background: rgba(108, 117, 125, 0.15); color: var(--text-gray); }
+
+        /* Time Indicators */
+        .time-indicator {
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .time-normal { background: rgba(76, 201, 240, 0.2); color: #0891b2; }
+        .time-warning { background: rgba(247, 37, 133, 0.2); color: #be185d; }
+        .time-critical { background: rgba(255, 0, 84, 0.2); color: #721c24; }
+
+        /* Agent Badge */
+        .agent-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(67, 97, 238, 0.15);
+            color: var(--primary);
+        }
+
+        /* Action Buttons */
+        .action-cell {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .btn-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-icon-success { background: var(--success); }
+        .btn-icon-danger { background: var(--danger); }
+        .btn-icon-warning { background: var(--warning); }
+
+        /* Manager Panel */
+        .manager-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--manager);
+        }
+
+        .admin-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--warning);
+        }
+
+        .manager-section {
+            margin-bottom: 25px;
+        }
+
+        .manager-section h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--dark);
+            font-size: 1.2rem;
+        }
+
+        .manager-section h3 i {
+            color: var(--manager);
+        }
+
+        .admin-section h3 i {
+            color: var(--warning);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 300px;
+            transform: translateX(100%);
+            opacity: 0;
+            animation: slideInRight 0.3s ease forwards;
+            border-left: 4px solid var(--primary);
+        }
+
+        @keyframes slideInRight {
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success { border-left-color: var(--success); }
+        .toast.warning { border-left-color: var(--warning); }
+        .toast.danger { border-left-color: var(--danger); }
+        .toast.manager { border-left-color: var(--manager); }
+        .toast.admin { border-left-color: var(--warning); }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gray);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #e9ecef;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .stats-container {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .stat-item {
+                flex: 1;
+                min-width: 100px;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filters {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .filters input,
+            .filters select {
+                width: 100%;
+            }
+        }
+
+        /* Critical Alert Animation */
+        .critical-alert {
+            animation: criticalPulse 1.5s infinite;
+        }
+
+        @keyframes criticalPulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 84, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 84, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 84, 0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Audio Alerts -->
+    <audio id="alertSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="warningSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-warning-alarm-buzzer-958.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <h1>Orders Management System</h1>
+        <div class="version">Complete Agent & Branch Setup</div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Login Screen -->
+        <div id="loginScreen">
+            <div class="login-icon">
+                <i class="fas fa-user-lock"></i>
+            </div>
+            <h2>Login to System</h2>
+            
+            <div id="loginMessage" class="login-message"></div>
+            
+            <div class="form-group">
+                <label for="userRole">Select Role:</label>
+                <select id="userRole" onchange="toggleRoleFields()">
+                    <option value="">Select your role</option>
+                    <option value="agent">Agent / Operator</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            
+            <div id="agentFields" style="display: none;">
+                <div class="form-group">
+                    <label for="agentNameInput">Select Your Name:</label>
+                    <select id="agentNameInput">
+                        <option value="">Select your name</option>
+                        <option value="Nirjala">Nirjala</option>
+                        <option value="manju ranabhat">manju ranabhat</option>
+                        <option value="Nons Rose">Nons Rose</option>
+                        <option value="Melvin compendio">Melvin compendio</option>
+                        <option value="SALEH EMAD">SALEH EMAD</option>
+                        <option value="Asmita Sapkota">Asmita Sapkota</option>
+                        <option value="MR.AHMED">MR.AHMED</option>
+                        <option value="Jasmine">Jasmine</option>
+                        <option value="Other Agent">Other Agent</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="shiftCodeInput">Agent Access Code:</label>
+                    <input type="password" id="shiftCodeInput" placeholder="Enter agent access code">
+                    <div class="code-note">Default Code: AGENT2024</div>
+                </div>
+            </div>
+            
+            <div id="managerFields" style="display: none;">
+                <div class="form-group">
+                    <label for="managerCodeInput">Manager Access Code:</label>
+                    <input type="password" id="managerCodeInput" placeholder="Enter manager access code">
+                    <div class="code-note">Default Code: MANAGER2024</div>
+                </div>
+            </div>
+            
+            <div id="adminFields" style="display: none;">
+                <div class="form-group">
+                    <label for="adminCodeInput">Admin Access Code:</label>
+                    <input type="password" id="adminCodeInput" placeholder="Enter admin access code">
+                    <div class="code-note">Default Code: ADMIN2024</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="loginUser()" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <button class="btn btn-outline" style="flex: 1;" onclick="demoLogin()">
+                    <i class="fas fa-magic"></i> Demo Mode
+                </button>
+            </div>
+
+            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                <h4 style="margin-bottom: 10px; color: var(--dark);">System Agents:</h4>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; text-align: left;">
+                    <div><i class="fas fa-user" style="color: var(--primary);"></i> Nirjala</div>
+                    <div><i class="fas fa-user" style="color: var(--primary);"></i> manju ranabhat</div>
+                    <div><i class="fas fa-user" style="color: var(--primary);"></i> Nons Rose</div>
+                    <div><i class="fas fa-user" style="color: var(--primary);"></i> Melvin compendio</div>
+                    <div><i class="fas fa-user" style="color: var(--primary);"></i> SALEH EMAD</div>
+                    <div><i class="fas fa-user" style="color: var(--primary);"></i> Asmita Sapkota</div>
+                    <div><i class="fas fa-user" style="color: var(--primary);"></i> MR.AHMED</div>
+                    <div><i class="fas fa-user" style="color: var(--primary);"></i> Jasmine</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agent Dashboard -->
+        <div id="agentDashboard" class="dashboard">
+            <div class="dashboard-header">
+                <div class="user-info">
+                    <div class="user-avatar" id="agentAvatar">A</div>
+                    <div class="user-details">
+                        <h3 id="agentUserName">Agent</h3>
+                        <span class="user-role agent" id="agentUserRole">Agent</span>
+                    </div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-value" id="agentTotalOrders">0</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="agentPendingOrders">0</div>
+                        <div class="stat-label">My Pending</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="agentMyActions">0</div>
+                        <div class="stat-label">My Actions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="agentFollowUps">0</div>
+                        <div class="stat-label">Follow-ups</div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-danger" onclick="logoutUser()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+
+            <!-- Follow-up Alert for Agent -->
+            <div id="agentFollowupAlert" class="followup-alert" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i> 
+                <span id="followupMessage">You have pending orders that need follow-up!</span>
+            </div>
+
+            <div class="action-buttons">
+                <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="handleFileUpload(event)">
+                
+                <button class="btn btn-outline" onclick="downloadTemplate()">
+                    <i class="fas fa-file-download"></i> Template
+                </button>
+                
+                <button class="btn btn-primary" onclick="document.getElementById('excelInput').click()">
+                    <i class="fas fa-file-upload"></i> Upload Excel
+                </button>
+                
+                <button class="btn btn-success" onclick="refreshAgentDashboard()">
+                    <i class="fas fa-redo"></i> Refresh
+                </button>
+                
+                <button class="btn btn-warning" onclick="showMyFollowUps()">
+                    <i class="fas fa-bell"></i> My Follow-ups
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3><i class="fas fa-list"></i> Orders Assigned to Me</h3>
+                    <div class="filters">
+                        <input type="text" id="agentSearchInput" placeholder="Search my orders..." onkeyup="filterAgentOrders()">
+                        <select id="agentBranchFilter" onchange="filterAgentOrders()">
+                            <option value="all">All Branches</option>
+                        </select>
+                        <select id="agentStatusFilter" onchange="filterAgentOrders()">
+                            <option value="pending">Only Pending</option>
+                            <option value="all">All Status</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table id="agentOrderTable">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Order Date</th>
+                                <th>Amount</th>
+                                <th>Branch</th>
+                                <th>Status</th>
+                                <th>Time Since Added</th>
+                                <th>Follow-up</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agentTableBody">
+                            <!-- Orders assigned to this agent will appear here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3><i class="fas fa-history"></i> My Recent Actions</h3>
+                    <div>
+                        <button class="btn btn-outline" onclick="exportMyActions()" style="font-size: 0.85rem;">
+                            <i class="fas fa-download"></i> Export My Actions
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table id="agentHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Action</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agentHistoryBody">
+                            <!-- Agent's action history will appear here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manager Dashboard -->
+        <div id="managerDashboard" class="dashboard">
+            <div class="dashboard-header">
+                <div class="user-info">
+                    <div class="user-avatar" id="managerAvatar">M</div>
+                    <div class="user-details">
+                        <h3 id="managerUserName">Manager</h3>
+                        <span class="user-role" id="managerUserRole">Manager</span>
+                    </div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-value" id="managerTotalOrders">0</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="managerPendingOrders">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="managerCriticalOrders">0</div>
+                        <div class="stat-label">Critical</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="managerActiveAgents">0</div>
+                        <div class="stat-label">Active Agents</div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-danger" onclick="logoutUser()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+
+            <!-- Follow-up Alert for Manager -->
+            <div id="managerFollowupAlert" class="followup-alert" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i> 
+                <span id="managerFollowupMessage">CRITICAL: Orders need immediate follow-up!</span>
+            </div>
+
+            <div class="action-buttons">
+                <input type="file" id="managerExcelInput" accept=".xlsx, .xls" style="display: none;" onchange="handleManagerFileUpload(event)">
+                
+                <button class="btn btn-outline" onclick="downloadTemplate()">
+                    <i class="fas fa-file-download"></i> Template
+                </button>
+                
+                <button class="btn btn-primary" onclick="document.getElementById('managerExcelInput').click()">
+                    <i class="fas fa-file-upload"></i> Upload Excel
+                </button>
+                
+                <button class="btn btn-success" onclick="exportDailyReport()">
+                    <i class="fas fa-file-export"></i> Daily Report
+                </button>
+                
+                <button class="btn btn-manager" onclick="assignOrdersToAgents()">
+                    <i class="fas fa-user-check"></i> Assign Orders
+                </button>
+                
+                <button class="btn btn-warning" onclick="showAllFollowUps()">
+                    <i class="fas fa-bell"></i> All Follow-ups
+                </button>
+            </div>
+
+            <div class="manager-panel">
+                <div class="manager-section">
+                    <h3><i class="fas fa-chart-bar"></i> System Overview</h3>
+                    <div id="dailySummary" style="line-height: 1.8; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                        <p>• Total Orders Processed: <strong>0</strong></p>
+                        <p>• Success Rate: <strong>0%</strong></p>
+                        <p>• Critical Orders: <strong>0</strong></p>
+                        <p>• Active Agents: <strong>0</strong></p>
+                        <p>• Total Actions: <strong>0</strong></p>
+                    </div>
+                </div>
+                
+                <div class="manager-section">
+                    <h3><i class="fas fa-users"></i> Agent Performance</h3>
+                    <div id="agentPerformance">
+                        <!-- Agent performance will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3><i class="fas fa-list-alt"></i> All System Orders</h3>
+                    <div class="filters">
+                        <input type="text" id="managerSearchInput" placeholder="Search all orders..." onkeyup="filterManagerOrders()">
+                        <select id="managerStatusFilter" onchange="filterManagerOrders()">
+                            <option value="all">All Status</option>
+                            <option value="">Pending</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                            <option value="Delayed">Delayed</option>
+                        </select>
+                        <select id="managerAgentFilter" onchange="filterManagerOrders()">
+                            <option value="all">All Agents</option>
+                        </select>
+                        <select id="managerBranchFilter" onchange="filterManagerOrders()">
+                            <option value="all">All Branches</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table id="managerOrderTable">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Order Date</th>
+                                <th>Amount</th>
+                                <th>Branch</th>
+                                <th>Status</th>
+                                <th>Assigned Agent</th>
+                                <th>Updated At</th>
+                                <th>Time Since</th>
+                                <th>Follow-up</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="managerTableBody">
+                            <!-- All orders will appear here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3><i class="fas fa-history"></i> Complete Action Log</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-outline" onclick="exportCompleteLog()" style="font-size: 0.85rem;">
+                            <i class="fas fa-download"></i> Export Log
+                        </button>
+                        <button class="btn btn-danger" onclick="clearOldData()" style="font-size: 0.85rem;">
+                            <i class="fas fa-trash"></i> Clear Old Data
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto; max-height: 400px;">
+                    <table id="fullLogTable">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Action</th>
+                                <th>Agent</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fullLogBody">
+                            <!-- Complete action log will appear here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="dashboard">
+            <div class="dashboard-header">
+                <div class="user-info">
+                    <div class="user-avatar" id="adminAvatar">AD</div>
+                    <div class="user-details">
+                        <h3 id="adminUserName">Admin</h3>
+                        <span class="user-role admin" id="adminUserRole">Administrator</span>
+                    </div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-value" id="adminTotalOrders">0</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="adminActiveAgents">0</div>
+                        <div class="stat-label">Active Agents</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="adminCriticalAlerts">0</div>
+                        <div class="stat-label">Critical Alerts</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="adminSystemHealth">100%</div>
+                        <div class="stat-label">System Health</div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-danger" onclick="logoutUser()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-admin" onclick="resetSystem()">
+                    <i class="fas fa-redo"></i> Reset System
+                </button>
+                <button class="btn btn-primary" onclick="backupAllData()">
+                    <i class="fas fa-database"></i> Backup All Data
+                </button>
+                <button class="btn btn-success" onclick="generateSystemReport()">
+                    <i class="fas fa-file-alt"></i> System Report
+                </button>
+                <button class="btn btn-warning" onclick="manageAgents()">
+                    <i class="fas fa-user-cog"></i> Manage Agents
+                </button>
+                <button class="btn btn-danger" onclick="clearAllData()">
+                    <i class="fas fa-broom"></i> Clear All Data
+                </button>
+            </div>
+
+            <div class="admin-panel">
+                <div class="manager-section">
+                    <h3><i class="fas fa-cogs"></i> System Configuration</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        <div>
+                            <h4>Agent Management</h4>
+                            <div id="agentList" style="margin-top: 10px;">
+                                <!-- List of agents will appear here -->
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4>Branch Management</h4>
+                            <div id="branchList" style="margin-top: 10px;">
+                                <!-- List of branches will appear here -->
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4>Alert Settings</h4>
+                            <div style="margin-top: 10px;">
+                                <label>Follow-up Time (minutes):</label>
+                                <input type="number" id="followupTime" value="30" min="5" max="120" style="width: 100%; padding: 8px; margin: 5px 0;">
+                                <label>Critical Alert Time (minutes):</label>
+                                <input type="number" id="criticalTime" value="45" min="10" max="180" style="width: 100%; padding: 8px; margin: 5px 0;">
+                                <button class="btn btn-primary" onclick="saveAlertSettings()" style="width: 100%; margin-top: 10px;">
+                                    <i class="fas fa-save"></i> Save Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Critical Follow-ups</h3>
+                    <div class="filters">
+                        <select id="adminAgentFilter" onchange="filterAdminOrders()">
+                            <option value="all">All Agents</option>
+                        </select>
+                        <select id="adminBranchFilter" onchange="filterAdminOrders()">
+                            <option value="all">All Branches</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table id="adminOrderTable">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Order Date</th>
+                                <th>Branch</th>
+                                <th>Assigned Agent</th>
+                                <th>Status</th>
+                                <th>Time Pending</th>
+                                <th>Follow-up Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody">
+                            <!-- Critical orders will appear here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3><i class="fas fa-chart-line"></i> System Analytics</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-outline" onclick="refreshAnalytics()" style="font-size: 0.85rem;">
+                            <i class="fas fa-redo"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="padding: 20px;">
+                    <div id="analyticsContent">
+                        <!-- Analytics will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= CONFIGURATION =================
+        const CONFIG = {
+            AGENT_CODE: "AGENT2024",
+            MANAGER_CODE: "MANAGER2024",
+            ADMIN_CODE: "ADMIN2024",
+            FOLLOWUP_THRESHOLD: 30, // minutes for follow-up
+            CRITICAL_THRESHOLD: 45, // minutes for critical alert
+            AUTO_ASSIGN_ENABLED: true
+        };
+
+        // ================= AGENTS & BRANCHES =================
+        const AGENTS = [
+            "Nirjala",
+            "manju ranabhat",
+            "Nons Rose",
+            "Melvin compendio",
+            "SALEH EMAD",
+            "Asmita Sapkota",
+            "MR.AHMED",
+            "Jasmine",
+            "Other Agent"
+        ];
+
+        const BRANCHES = [
+            "Hamdan",
+            "Khalidiyah",
+            "Shabiya",
+            "Muroor",
+            "Barsha",
+            "Satwa",
+            "Al Majaz",
+            "Al Rigga"
+        ];
+
+        // ================= GLOBAL STATE =================
+        let state = {
+            currentUser: null,
+            userRole: '', // 'agent', 'manager', 'admin'
+            sessionStart: null,
+            allOrders: [],
+            actionLog: [],
+            agents: [...AGENTS],
+            branches: [...BRANCHES],
+            systemSettings: {
+                followupTime: 30,
+                criticalTime: 45,
+                autoAssign: true
+            },
+            lastAlertTime: 0,
+            alertCooldown: 5000 // 5 seconds between alerts
+        };
+
+        // ================= INITIALIZATION =================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStateFromStorage();
+            
+            // Auto-save every minute
+            setInterval(saveState, 60000);
+            
+            // Check for follow-ups every 30 seconds
+            setInterval(checkFollowUps, 30000);
+            
+            // Auto-refresh dashboard every 2 minutes
+            setInterval(autoRefreshDashboard, 120000);
+        });
+
+        function loadStateFromStorage() {
+            // Clear previous login messages
+            const loginMessage = document.getElementById('loginMessage');
+            loginMessage.className = 'login-message';
+            loginMessage.textContent = '';
+            
+            // Load all data from localStorage
+            const savedState = localStorage.getItem('oms_complete_state');
+            const savedUser = localStorage.getItem('oms_current_user');
+            
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    state.allOrders = parsed.allOrders || [];
+                    state.actionLog = parsed.actionLog || [];
+                    state.systemSettings = parsed.systemSettings || state.systemSettings;
+                    
+                    // Ensure all orders have proper timestamps
+                    state.allOrders.forEach(order => {
+                        order.AddedAt = order.AddedAt || new Date().getTime();
+                        if (order.UpdatedBy && !order.UpdatedAt) {
+                            order.UpdatedAt = new Date().getTime();
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error loading state:', e);
+                }
+            }
+            
+            if (savedUser) {
+                try {
+                    const userData = JSON.parse(savedUser);
+                    state.currentUser = userData.name;
+                    state.userRole = userData.role;
+                    state.sessionStart = new Date(userData.loginTime);
+                    
+                    showDashboard();
+                } catch (e) {
+                    console.error('Error loading user:', e);
+                }
+            }
+        }
+
+        function saveState() {
+            // Save all data to localStorage
+            localStorage.setItem('oms_complete_state', JSON.stringify({
+                allOrders: state.allOrders,
+                actionLog: state.actionLog,
+                systemSettings: state.systemSettings
+            }));
+            
+            if (state.currentUser) {
+                localStorage.setItem('oms_current_user', JSON.stringify({
+                    name: state.currentUser,
+                    role: state.userRole,
+                    loginTime: state.sessionStart
+                }));
+            }
+        }
+
+        // ================= LOGIN SYSTEM =================
+        function toggleRoleFields() {
+            const role = document.getElementById('userRole').value;
+            document.getElementById('agentFields').style.display = role === 'agent' ? 'block' : 'none';
+            document.getElementById('managerFields').style.display = role === 'manager' ? 'block' : 'none';
+            document.getElementById('adminFields').style.display = role === 'admin' ? 'block' : 'none';
+            
+            const loginBtn = document.getElementById('loginBtn');
+            if (role === 'agent') {
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Start Shift';
+            } else if (role === 'manager') {
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Manager Login';
+            } else if (role === 'admin') {
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Admin Login';
+            }
+            
+            // Clear any previous messages
+            const loginMessage = document.getElementById('loginMessage');
+            loginMessage.className = 'login-message';
+            loginMessage.textContent = '';
+        }
+
+        function loginUser() {
+            const role = document.getElementById('userRole').value;
+            const loginMessage = document.getElementById('loginMessage');
+            
+            // Clear previous messages
+            loginMessage.className = 'login-message';
+            loginMessage.textContent = '';
+            
+            if (!role) {
+                loginMessage.className = 'login-message error';
+                loginMessage.textContent = 'Please select a role';
+                return;
+            }
+            
+            let isValid = false;
+            
+            if (role === 'agent') {
+                const name = document.getElementById('agentNameInput').value;
+                const code = document.getElementById('shiftCodeInput').value.trim();
+                
+                if (!name) {
+                    loginMessage.className = 'login-message error';
+                    loginMessage.textContent = 'Please select your name';
+                    return;
+                }
+                
+                if (code !== CONFIG.AGENT_CODE) {
+                    loginMessage.className = 'login-message error';
+                    loginMessage.textContent = 'Invalid agent access code';
+                    return;
+                }
+                
+                state.currentUser = name;
+                state.userRole = 'agent';
+                isValid = true;
+                
+            } else if (role === 'manager') {
+                const code = document.getElementById('managerCodeInput').value.trim();
+                
+                if (code !== CONFIG.MANAGER_CODE) {
+                    loginMessage.className = 'login-message error';
+                    loginMessage.textContent = 'Invalid manager access code';
+                    return;
+                }
+                
+                state.currentUser = 'Manager';
+                state.userRole = 'manager';
+                isValid = true;
+                
+            } else if (role === 'admin') {
+                const code = document.getElementById('adminCodeInput').value.trim();
+                
+                if (code !== CONFIG.ADMIN_CODE) {
+                    loginMessage.className = 'login-message error';
+                    loginMessage.textContent = 'Invalid admin access code';
+                    return;
+                }
+                
+                state.currentUser = 'Administrator';
+                state.userRole = 'admin';
+                isValid = true;
+            }
+            
+            if (isValid) {
+                state.sessionStart = new Date();
+                
+                loginMessage.className = 'login-message success';
+                loginMessage.textContent = `Welcome, ${state.currentUser}! Loading dashboard...`;
+                
+                setTimeout(() => {
+                    saveState();
+                    showDashboard();
+                    showToast(`Welcome, ${state.currentUser}!`, 'success');
+                }, 1000);
+            }
+        }
+
+        function demoLogin() {
+            // Demo as first agent
+            state.currentUser = AGENTS[0];
+            state.userRole = 'agent';
+            state.sessionStart = new Date();
+            
+            // Load demo data
+            loadDemoData();
+            
+            saveState();
+            
+            const loginMessage = document.getElementById('loginMessage');
+            loginMessage.className = 'login-message success';
+            loginMessage.textContent = 'Demo mode activated! Loading dashboard...';
+            
+            setTimeout(() => {
+                showDashboard();
+                showToast('Demo mode activated as ' + state.currentUser, 'success');
+            }, 1000);
+        }
+
+        function logoutUser() {
+            if (confirm('Are you sure you want to logout?')) {
+                saveState();
+                localStorage.removeItem('oms_current_user');
+                
+                // Reset and show login screen
+                state.currentUser = null;
+                state.userRole = '';
+                
+                document.getElementById('agentDashboard').classList.remove('active');
+                document.getElementById('managerDashboard').classList.remove('active');
+                document.getElementById('adminDashboard').classList.remove('active');
+                document.getElementById('loginScreen').style.display = 'block';
+                
+                // Clear form
+                document.getElementById('userRole').value = '';
+                document.getElementById('agentNameInput').value = '';
+                document.getElementById('shiftCodeInput').value = '';
+                document.getElementById('managerCodeInput').value = '';
+                document.getElementById('adminCodeInput').value = '';
+                document.getElementById('agentFields').style.display = 'none';
+                document.getElementById('managerFields').style.display = 'none';
+                document.getElementById('adminFields').style.display = 'none';
+                
+                const loginMessage = document.getElementById('loginMessage');
+                loginMessage.className = 'login-message success';
+                loginMessage.textContent = 'Successfully logged out!';
+                
+                showToast('Logged out successfully', 'success');
+            }
+        }
+
+        // ================= SHOW DASHBOARD =================
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            
+            // Hide all dashboards
+            document.getElementById('agentDashboard').classList.remove('active');
+            document.getElementById('managerDashboard').classList.remove('active');
+            document.getElementById('adminDashboard').classList.remove('active');
+            
+            // Show appropriate dashboard
+            if (state.userRole === 'agent') {
+                document.getElementById('agentDashboard').classList.add('active');
+                refreshAgentDashboard();
+            } else if (state.userRole === 'manager') {
+                document.getElementById('managerDashboard').classList.add('active');
+                refreshManagerDashboard();
+            } else if (state.userRole === 'admin') {
+                document.getElementById('adminDashboard').classList.add('active');
+                refreshAdminDashboard();
+            }
+            
+            updateUserInfo();
+        }
+
+        function updateUserInfo() {
+            const initials = state.currentUser.split(' ').map(n => n[0]).join('').toUpperCase();
+            
+            if (state.userRole === 'agent') {
+                document.getElementById('agentAvatar').textContent = initials;
+                document.getElementById('agentUserName').textContent = state.currentUser;
+                document.getElementById('agentUserRole').textContent = 'Agent';
+            } else if (state.userRole === 'manager') {
+                document.getElementById('managerAvatar').textContent = initials;
+                document.getElementById('managerUserName').textContent = state.currentUser;
+                document.getElementById('managerUserRole').textContent = 'Manager';
+            } else if (state.userRole === 'admin') {
+                document.getElementById('adminAvatar').textContent = initials;
+                document.getElementById('adminUserName').textContent = state.currentUser;
+                document.getElementById('adminUserRole').textContent = 'Administrator';
+            }
+        }
+
+        // ================= AGENT DASHBOARD =================
+        function refreshAgentDashboard() {
+            updateAgentStats();
+            updateAgentOrdersTable();
+            updateAgentHistory();
+            checkAgentFollowUps();
+        }
+
+        function updateAgentStats() {
+            // Agent's assigned orders
+            const myOrders = state.allOrders.filter(order => 
+                order.AssignedAgent === state.currentUser
+            );
+            
+            const myPendingOrders = myOrders.filter(order => 
+                order.Status === "" || !order.Status || order.Status === "Pending"
+            );
+            
+            const myFollowUps = myOrders.filter(order => 
+                isOrderNeedsFollowup(order, state.currentUser)
+            );
+            
+            // Agent's actions
+            const myActions = state.actionLog.filter(action => 
+                action.Agent === state.currentUser
+            );
+            
+            document.getElementById('agentTotalOrders').textContent = myOrders.length;
+            document.getElementById('agentPendingOrders').textContent = myPendingOrders.length;
+            document.getElementById('agentMyActions').textContent = myActions.length;
+            document.getElementById('agentFollowUps').textContent = myFollowUps.length;
+        }
+
+        function updateAgentOrdersTable() {
+            const tbody = document.getElementById('agentTableBody');
+            tbody.innerHTML = '';
+            
+            // Agent sees only orders assigned to them
+            const myOrders = state.allOrders.filter(order => 
+                order.AssignedAgent === state.currentUser
+            );
+            
+            const searchTerm = document.getElementById('agentSearchInput').value.toLowerCase();
+            const branchFilter = document.getElementById('agentBranchFilter').value;
+            const statusFilter = document.getElementById('agentStatusFilter').value;
+            const now = new Date().getTime();
+            
+            // Update branch filter list
+            updateBranchFilter('agentBranchFilter', myOrders);
+            
+            const filteredOrders = myOrders.filter(order => {
+                const matchesSearch = searchTerm === '' || 
+                    order.OrderID.toLowerCase().includes(searchTerm) ||
+                    (order.Customer && order.Customer.toLowerCase().includes(searchTerm));
+                
+                const matchesBranch = branchFilter === 'all' || order.Branch === branchFilter;
+                
+                const matchesStatus = statusFilter === 'all' || 
+                    (statusFilter === 'pending' && (!order.Status || order.Status === ""));
+                
+                return matchesSearch && matchesBranch && matchesStatus;
+            });
+            
+            if (filteredOrders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-gray);">
+                            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 10px; display: block; color: var(--success);"></i>
+                            <div>No orders assigned to you</div>
+                            <div style="font-size: 0.9rem; margin-top: 10px;">Contact manager for new assignments</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            filteredOrders.forEach(order => {
+                const tr = document.createElement('tr');
+                
+                // Calculate time elapsed
+                const addedTime = order.AddedAt || new Date(order.OrderDate || Date.now()).getTime();
+                const minutesPassed = Math.floor((now - addedTime) / 60000);
+                
+                // Determine time class and follow-up status
+                let timeClass = 'time-normal';
+                let followupText = 'OK';
+                let needsFollowup = false;
+                
+                if (minutesPassed >= state.systemSettings.criticalTime && (!order.Status || order.Status === "")) {
+                    timeClass = 'time-critical';
+                    followupText = 'CRITICAL';
+                    needsFollowup = true;
+                    tr.classList.add('critical-alert');
+                } else if (minutesPassed >= state.systemSettings.followupTime && (!order.Status || order.Status === "")) {
+                    timeClass = 'time-warning';
+                    followupText = 'FOLLOW-UP';
+                    needsFollowup = true;
+                }
+                
+                const orderDate = new Date(addedTime);
+                const status = order.Status || 'Pending';
+                
+                tr.innerHTML = `
+                    <td><strong>${order.OrderID}</strong></td>
+                    <td>${order.Customer || 'Unknown Customer'}</td>
+                    <td>${orderDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td>${order.Total ? `$${order.Total.toFixed(2)}` : '$0.00'}</td>
+                    <td><span class="status-badge">${order.Branch || 'Unspecified'}</span></td>
+                    <td><span class="status-badge status-${status.toLowerCase()}">${status}</span></td>
+                    <td>
+                        <span class="time-indicator ${timeClass}">
+                            ${minutesPassed} min
+                        </span>
+                    </td>
+                    <td>
+                        <span class="time-indicator ${needsFollowup ? 'time-warning' : 'time-normal'}">
+                            ${followupText}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-cell">
+                            <button class="btn-icon btn-icon-success" onclick="updateOrderStatus('${order.OrderID}', 'Delivered')" title="Mark as Delivered">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn-icon btn-icon-danger" onclick="updateOrderStatus('${order.OrderID}', 'Cancelled')" title="Cancel Order">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                            <button class="btn-icon btn-icon-warning" onclick="updateOrderStatus('${order.OrderID}', 'Delayed')" title="Mark as Delayed">
+                                <i class="fas fa-clock"></i>
+                            </button>
+                            <button class="btn-icon btn-icon-warning" onclick="requestFollowup('${order.OrderID}')" title="Request Follow-up" ${!needsFollowup ? 'disabled style="opacity:0.5"' : ''}>
+                                <i class="fas fa-bell"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateAgentHistory() {
+            const tbody = document.getElementById('agentHistoryBody');
+            tbody.innerHTML = '';
+            
+            // Show agent's actions
+            const myActions = state.actionLog
+                .filter(action => action.Agent === state.currentUser)
+                .slice(-15) // Last 15 actions
+                .reverse(); // Most recent first
+            
+            if (myActions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-gray);">
+                            <i class="fas fa-history" style="font-size: 2rem; margin-bottom: 10px; display: block; opacity: 0.3;"></i>
+                            <div>No actions recorded yet</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            myActions.forEach(action => {
+                const tr = document.createElement('tr');
+                const actionDate = new Date(action.Timestamp || action.AddedAt || Date.now());
+                
+                tr.innerHTML = `
+                    <td><strong>${action.OrderID}</strong></td>
+                    <td>${action.Action || 'Status Update'}</td>
+                    <td><span class="status-badge status-${action.Status ? action.Status.toLowerCase() : 'pending'}">${action.Status || 'Pending'}</span></td>
+                    <td>${action.Reason || '-'}</td>
+                    <td>${actionDate.toLocaleDateString()}</td>
+                    <td>${actionDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterAgentOrders() {
+            updateAgentOrdersTable();
+        }
+
+        function checkAgentFollowUps() {
+            const myOrders = state.allOrders.filter(order => 
+                order.AssignedAgent === state.currentUser
+            );
+            
+            const followUps = myOrders.filter(order => 
+                isOrderNeedsFollowup(order, state.currentUser)
+            );
+            
+            const alertDiv = document.getElementById('agentFollowupAlert');
+            
+            if (followUps.length > 0) {
+                alertDiv.style.display = 'block';
+                document.getElementById('followupMessage').textContent = 
+                    `You have ${followUps.length} order${followUps.length > 1 ? 's' : ''} that need${followUps.length > 1 ? '' : 's'} follow-up!`;
+                
+                // Play alert if needed
+                showAlertIfNeeded(followUps.length);
+            } else {
+                alertDiv.style.display = 'none';
+            }
+        }
+
+        function showMyFollowUps() {
+            // Filter to show only follow-up orders
+            document.getElementById('agentStatusFilter').value = 'pending';
+            filterAgentOrders();
+            
+            // Scroll to follow-up alert
+            const alertDiv = document.getElementById('agentFollowupAlert');
+            if (alertDiv.style.display !== 'none') {
+                alertDiv.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            showToast('Showing your follow-up orders', 'warning');
+        }
+
+        function exportMyActions() {
+            const myActions = state.actionLog.filter(action => 
+                action.Agent === state.currentUser
+            );
+            
+            if (myActions.length === 0) {
+                showToast('No actions to export', 'warning');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(myActions, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            saveAs(blob, `my_actions_${state.currentUser}_${new Date().toISOString().split('T')[0]}.json`);
+            
+            showToast('Your actions exported successfully', 'success');
+        }
+
+        // ================= MANAGER DASHBOARD =================
+        function refreshManagerDashboard() {
+            updateManagerStats();
+            updateManagerOrdersTable();
+            updateManagerLog();
+            updateAgentPerformance();
+            checkManagerFollowUps();
+        }
+
+        function updateManagerStats() {
+            const totalOrders = state.allOrders.length;
+            const pendingOrders = state.allOrders.filter(o => !o.Status || o.Status === "").length;
+            const criticalOrders = state.allOrders.filter(o => 
+                isOrderNeedsFollowup(o, o.AssignedAgent)
+            ).length;
+            
+            // Get unique agents with assigned orders
+            const activeAgents = [...new Set(state.allOrders
+                .filter(o => o.AssignedAgent)
+                .map(o => o.AssignedAgent))];
+            
+            document.getElementById('managerTotalOrders').textContent = totalOrders;
+            document.getElementById('managerPendingOrders').textContent = pendingOrders;
+            document.getElementById('managerCriticalOrders').textContent = criticalOrders;
+            document.getElementById('managerActiveAgents').textContent = activeAgents.length;
+            
+            // Update overview
+            const deliveredOrders = state.allOrders.filter(o => o.Status === 'Delivered').length;
+            const successRate = totalOrders > 0 ? Math.round((deliveredOrders / totalOrders) * 100) : 0;
+            
+            document.getElementById('dailySummary').innerHTML = `
+                <p>• Total Orders: <strong>${totalOrders}</strong></p>
+                <p>• Success Rate: <strong>${successRate}%</strong></p>
+                <p>• Pending Orders: <strong>${pendingOrders}</strong></p>
+                <p>• Critical Orders: <strong>${criticalOrders}</strong></p>
+                <p>• Active Agents: <strong>${activeAgents.length}</strong></p>
+                <p>• Total Actions: <strong>${state.actionLog.length}</strong></p>
+            `;
+        }
+
+        function updateManagerOrdersTable() {
+            const tbody = document.getElementById('managerTableBody');
+            tbody.innerHTML = '';
+            
+            const searchTerm = document.getElementById('managerSearchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('managerStatusFilter').value;
+            const agentFilter = document.getElementById('managerAgentFilter').value;
+            const branchFilter = document.getElementById('managerBranchFilter').value;
+            const now = new Date().getTime();
+            
+            // Update filter lists
+            updateAgentFilter('managerAgentFilter');
+            updateBranchFilter('managerBranchFilter', state.allOrders);
+            
+            const filteredOrders = state.allOrders.filter(order => {
+                const matchesSearch = searchTerm === '' || 
+                    order.OrderID.toLowerCase().includes(searchTerm) ||
+                    (order.Customer && order.Customer.toLowerCase().includes(searchTerm));
+                
+                const matchesStatus = statusFilter === 'all' || 
+                    (statusFilter === '' && (!order.Status || order.Status === "")) ||
+                    order.Status === statusFilter;
+                
+                const matchesAgent = agentFilter === 'all' || order.AssignedAgent === agentFilter;
+                const matchesBranch = branchFilter === 'all' || order.Branch === branchFilter;
+                
+                return matchesSearch && matchesStatus && matchesAgent && matchesBranch;
+            });
+            
+            if (filteredOrders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-gray);">
+                            <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                            <div>No orders match search criteria</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            filteredOrders.forEach(order => {
+                const tr = document.createElement('tr');
+                
+                // Calculate time elapsed
+                const addedTime = order.AddedAt || new Date(order.OrderDate || Date.now()).getTime();
+                const minutesPassed = Math.floor((now - addedTime) / 60000);
+                
+                // Determine time class and follow-up status
+                let timeClass = 'time-normal';
+                let followupText = 'OK';
+                let needsFollowup = false;
+                
+                if (minutesPassed >= state.systemSettings.criticalTime && (!order.Status || order.Status === "")) {
+                    timeClass = 'time-critical';
+                    followupText = 'CRITICAL';
+                    needsFollowup = true;
+                    tr.classList.add('critical-alert');
+                } else if (minutesPassed >= state.systemSettings.followupTime && (!order.Status || order.Status === "")) {
+                    timeClass = 'time-warning';
+                    followupText = 'FOLLOW-UP';
+                    needsFollowup = true;
+                }
+                
+                const orderDate = new Date(addedTime);
+                const updatedDate = order.UpdatedAt ? new Date(order.UpdatedAt) : null;
+                const status = order.Status || 'Pending';
+                
+                tr.innerHTML = `
+                    <td><strong>${order.OrderID}</strong></td>
+                    <td>${order.Customer || 'Unknown Customer'}</td>
+                    <td>${orderDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td>${order.Total ? `$${order.Total.toFixed(2)}` : '$0.00'}</td>
+                    <td><span class="status-badge">${order.Branch || 'Unspecified'}</span></td>
+                    <td><span class="status-badge status-${status.toLowerCase()}">${status}</span></td>
+                    <td><span class="agent-badge">${order.AssignedAgent || 'Unassigned'}</span></td>
+                    <td>${updatedDate ? updatedDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}</td>
+                    <td>
+                        <span class="time-indicator ${timeClass}">
+                            ${minutesPassed} min
+                        </span>
+                    </td>
+                    <td>
+                        <span class="time-indicator ${needsFollowup ? 'time-warning' : 'time-normal'}">
+                            ${followupText}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-cell">
+                            <button class="btn-icon btn-icon-success" onclick="assignOrderToAgent('${order.OrderID}', '${state.currentUser}')" title="Assign to Agent">
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                            <button class="btn-icon btn-icon-warning" onclick="escalateOrder('${order.OrderID}')" title="Escalate Order" ${!needsFollowup ? 'disabled style="opacity:0.5"' : ''}>
+                                <i class="fas fa-exclamation"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateManagerLog() {
+            const tbody = document.getElementById('fullLogBody');
+            tbody.innerHTML = '';
+            
+            // Show all actions, most recent first
+            const allActions = state.actionLog.slice().reverse();
+            
+            if (allActions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-gray);">
+                            <i class="fas fa-clipboard-list" style="font-size: 2rem; margin-bottom: 10px; display: block; opacity: 0.3;"></i>
+                            <div>No actions recorded</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            allActions.forEach(action => {
+                const tr = document.createElement('tr');
+                const actionDate = new Date(action.Timestamp || action.AddedAt || Date.now());
+                
+                tr.innerHTML = `
+                    <td><strong>${action.OrderID}</strong></td>
+                    <td>${action.Action || 'Update'}</td>
+                    <td><span class="agent-badge">${action.Agent || 'System'}</span></td>
+                    <td>${actionDate.toLocaleDateString()}</td>
+                    <td>${actionDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td>${action.Details || action.Reason || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateAgentPerformance() {
+            const container = document.getElementById('agentPerformance');
+            container.innerHTML = '';
+            
+            // Calculate performance for each agent
+            const agentStats = {};
+            
+            AGENTS.forEach(agent => {
+                const agentOrders = state.allOrders.filter(o => o.AssignedAgent === agent);
+                const agentActions = state.actionLog.filter(a => a.Agent === agent);
+                
+                if (agentOrders.length > 0 || agentActions.length > 0) {
+                    const pending = agentOrders.filter(o => !o.Status || o.Status === "").length;
+                    const completed = agentOrders.filter(o => o.Status && o.Status !== "").length;
+                    const completionRate = agentOrders.length > 0 ? 
+                        Math.round((completed / agentOrders.length) * 100) : 0;
+                    
+                    agentStats[agent] = {
+                        orders: agentOrders.length,
+                        pending: pending,
+                        completed: completed,
+                        rate: completionRate,
+                        actions: agentActions.length
+                    };
+                }
+            });
+            
+            if (Object.keys(agentStats).length === 0) {
+                container.innerHTML = '<p style="color: var(--text-gray); text-align: center;">No agent activity yet</p>';
+                return;
+            }
+            
+            // Sort agents by completion rate
+            const sortedAgents = Object.entries(agentStats)
+                .sort((a, b) => b[1].rate - a[1].rate);
+            
+            sortedAgents.forEach(([agent, stats]) => {
+                const div = document.createElement('div');
+                div.style.marginBottom = '15px';
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span><strong>${agent}</strong></span>
+                        <span>${stats.rate}% complete</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-gray); margin-bottom: 5px;">
+                        <span>Orders: ${stats.orders} (${stats.pending} pending)</span>
+                        <span>Actions: ${stats.actions}</span>
+                    </div>
+                    <div style="background: var(--border); height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${stats.rate}%; height: 100%; background: var(--primary);"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateAgentFilter(selectId) {
+            const select = document.getElementById(selectId);
+            const currentValue = select.value;
+            
+            select.innerHTML = '<option value="all">All Agents</option>';
+            AGENTS.forEach(agent => {
+                select.innerHTML += `<option value="${agent}">${agent}</option>`;
+            });
+            
+            // Maintain previously selected value
+            select.value = currentValue;
+        }
+
+        function updateBranchFilter(selectId, orders) {
+            const select = document.getElementById(selectId);
+            const currentValue = select.value;
+            
+            // Extract unique branches
+            const uniqueBranches = [...new Set([
+                ...BRANCHES,
+                ...orders.map(order => order.Branch || 'Unspecified')
+            ])];
+            
+            select.innerHTML = '<option value="all">All Branches</option>';
+            uniqueBranches.forEach(branch => {
+                if (branch) {
+                    select.innerHTML += `<option value="${branch}">${branch}</option>`;
+                }
+            });
+            
+            // Maintain previously selected value
+            select.value = currentValue;
+        }
+
+        function filterManagerOrders() {
+            updateManagerOrdersTable();
+        }
+
+        function checkManagerFollowUps() {
+            const criticalOrders = state.allOrders.filter(order => 
+                isOrderNeedsFollowup(order, order.AssignedAgent)
+            );
+            
+            const alertDiv = document.getElementById('managerFollowupAlert');
+            
+            if (criticalOrders.length > 0) {
+                alertDiv.style.display = 'block';
+                document.getElementById('managerFollowupMessage').textContent = 
+                    `CRITICAL: ${criticalOrders.length} order${criticalOrders.length > 1 ? 's' : ''} need${criticalOrders.length > 1 ? '' : 's'} immediate follow-up!`;
+                
+                // Play critical alert
+                showCriticalAlertIfNeeded(criticalOrders.length);
+            } else {
+                alertDiv.style.display = 'none';
+            }
+        }
+
+        function assignOrdersToAgents() {
+            // Auto-assign unassigned orders to agents
+            const unassignedOrders = state.allOrders.filter(order => 
+                (!order.AssignedAgent || order.AssignedAgent === '') && 
+                (!order.Status || order.Status === "")
+            );
+            
+            if (unassignedOrders.length === 0) {
+                showToast('No unassigned orders found', 'info');
+                return;
+            }
+            
+            let assignedCount = 0;
+            unassignedOrders.forEach((order, index) => {
+                // Round-robin assignment
+                const agentIndex = index % AGENTS.length;
+                const agent = AGENTS[agentIndex];
+                
+                order.AssignedAgent = agent;
+                order.UpdatedAt = new Date().getTime();
+                order.UpdatedBy = state.currentUser;
+                
+                // Log the assignment
+                state.actionLog.push({
+                    OrderID: order.OrderID,
+                    Action: `Order assigned to ${agent}`,
+                    Agent: state.currentUser,
+                    Timestamp: new Date().toISOString(),
+                    Details: `Auto-assigned by manager`,
+                    AddedAt: new Date().getTime()
+                });
+                
+                assignedCount++;
+            });
+            
+            saveState();
+            refreshManagerDashboard();
+            showToast(`${assignedCount} orders assigned to agents`, 'success');
+        }
+
+        function showAllFollowUps() {
+            // Filter to show only critical orders
+            const criticalOrders = state.allOrders.filter(order => 
+                isOrderNeedsFollowup(order, order.AssignedAgent)
+            );
+            
+            if (criticalOrders.length === 0) {
+                showToast('No follow-up orders found', 'info');
+                return;
+            }
+            
+            // Show in table
+            const tbody = document.getElementById('managerTableBody');
+            tbody.innerHTML = '';
+            
+            const now = new Date().getTime();
+            
+            criticalOrders.forEach(order => {
+                const tr = document.createElement('tr');
+                const addedTime = order.AddedAt || new Date(order.OrderDate || Date.now()).getTime();
+                const minutesPassed = Math.floor((now - addedTime) / 60000);
+                
+                tr.classList.add('critical-alert');
+                
+                tr.innerHTML = `
+                    <td><strong>${order.OrderID}</strong></td>
+                    <td>${order.Customer || 'Unknown'}</td>
+                    <td>${new Date(addedTime).toLocaleTimeString()}</td>
+                    <td>${order.Total ? `$${order.Total.toFixed(2)}` : '$0.00'}</td>
+                    <td>${order.Branch || 'Unspecified'}</td>
+                    <td>${order.Status || 'Pending'}</td>
+                    <td><span class="agent-badge">${order.AssignedAgent || 'Unassigned'}</span></td>
+                    <td>${minutesPassed} min</td>
+                    <td><span class="time-indicator time-critical">CRITICAL</span></td>
+                    <td>
+                        <button class="btn-icon btn-icon-success" onclick="assignOrderToAgent('${order.OrderID}', '${state.currentUser}')">
+                            <i class="fas fa-user-plus"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            showToast(`Showing ${criticalOrders.length} critical orders`, 'warning');
+        }
+
+        function exportCompleteLog() {
+            const dataStr = JSON.stringify(state.actionLog, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            saveAs(blob, `complete_log_${new Date().toISOString().split('T')[0]}.json`);
+            showToast('Complete log exported', 'success');
+        }
+
+        function clearOldData() {
+            if (confirm('Clear orders older than 30 days?')) {
+                const thirtyDaysAgo = new Date().getTime() - (30 * 24 * 60 * 60 * 1000);
+                const oldOrders = state.allOrders.filter(order => 
+                    order.AddedAt < thirtyDaysAgo
+                );
+                
+                state.allOrders = state.allOrders.filter(order => 
+                    order.AddedAt >= thirtyDaysAgo
+                );
+                
+                saveState();
+                refreshManagerDashboard();
+                showToast(`Cleared ${oldOrders.length} old orders`, 'success');
+            }
+        }
+
+        // ================= ADMIN DASHBOARD =================
+        function refreshAdminDashboard() {
+            updateAdminStats();
+            updateAdminOrdersTable();
+            updateAdminAnalytics();
+            updateAgentList();
+            updateBranchList();
+        }
+
+        function updateAdminStats() {
+            const totalOrders = state.allOrders.length;
+            const activeAgents = [...new Set(state.allOrders
+                .filter(o => o.AssignedAgent)
+                .map(o => o.AssignedAgent))].length;
+            
+            const criticalOrders = state.allOrders.filter(o => 
+                isOrderNeedsFollowup(o, o.AssignedAgent)
+            ).length;
+            
+            // Calculate system health (percentage of orders processed in last 24 hours)
+            const oneDayAgo = new Date().getTime() - (24 * 60 * 60 * 1000);
+            const recentOrders = state.allOrders.filter(o => o.AddedAt > oneDayAgo);
+            const processedRecent = recentOrders.filter(o => o.Status && o.Status !== "").length;
+            const systemHealth = recentOrders.length > 0 ? 
+                Math.round((processedRecent / recentOrders.length) * 100) : 100;
+            
+            document.getElementById('adminTotalOrders').textContent = totalOrders;
+            document.getElementById('adminActiveAgents').textContent = activeAgents;
+            document.getElementById('adminCriticalAlerts').textContent = criticalOrders;
+            document.getElementById('adminSystemHealth').textContent = `${systemHealth}%`;
+            
+            // Update settings in form
+            document.getElementById('followupTime').value = state.systemSettings.followupTime;
+            document.getElementById('criticalTime').value = state.systemSettings.criticalTime;
+        }
+
+        function updateAdminOrdersTable() {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = '';
+            
+            // Show only critical orders
+            const criticalOrders = state.allOrders.filter(order => 
+                isOrderNeedsFollowup(order, order.AssignedAgent)
+            );
+            
+            const agentFilter = document.getElementById('adminAgentFilter').value;
+            const branchFilter = document.getElementById('adminBranchFilter').value;
+            const now = new Date().getTime();
+            
+            updateAgentFilter('adminAgentFilter');
+            updateBranchFilter('adminBranchFilter', criticalOrders);
+            
+            const filteredOrders = criticalOrders.filter(order => {
+                const matchesAgent = agentFilter === 'all' || order.AssignedAgent === agentFilter;
+                const matchesBranch = branchFilter === 'all' || order.Branch === branchFilter;
+                return matchesAgent && matchesBranch;
+            });
+            
+            if (filteredOrders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-gray);">
+                            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 10px; display: block; color: var(--success);"></i>
+                            <div>No critical orders found</div>
+                            <div style="font-size: 0.9rem; margin-top: 10px;">System is running smoothly!</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            filteredOrders.forEach(order => {
+                const tr = document.createElement('tr');
+                const addedTime = order.AddedAt || new Date(order.OrderDate || Date.now()).getTime();
+                const minutesPassed = Math.floor((now - addedTime) / 60000);
+                
+                tr.classList.add('critical-alert');
+                
+                tr.innerHTML = `
+                    <td><strong>${order.OrderID}</strong></td>
+                    <td>${order.Customer || 'Unknown'}</td>
+                    <td>${new Date(addedTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td>${order.Branch || 'Unspecified'}</td>
+                    <td><span class="agent-badge">${order.AssignedAgent || 'Unassigned'}</span></td>
+                    <td>${order.Status || 'Pending'}</td>
+                    <td>
+                        <span class="time-indicator time-critical">
+                            ${minutesPassed} min
+                        </span>
+                    </td>
+                    <td>
+                        <span class="time-indicator time-critical">
+                            ${minutesPassed >= state.systemSettings.criticalTime ? 'CRITICAL' : 'FOLLOW-UP'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-cell">
+                            <button class="btn-icon btn-icon-success" onclick="forceCompleteOrder('${order.OrderID}')" title="Force Complete">
+                                <i class="fas fa-check-double"></i>
+                            </button>
+                            <button class="btn-icon btn-icon-warning" onclick="reassignOrder('${order.OrderID}')" title="Reassign">
+                                <i class="fas fa-user-friends"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateAdminAnalytics() {
+            const container = document.getElementById('analyticsContent');
+            
+            // Calculate analytics
+            const today = new Date().toISOString().split('T')[0];
+            const todayOrders = state.allOrders.filter(o => 
+                new Date(o.AddedAt).toISOString().split('T')[0] === today
+            );
+            
+            const processedToday = todayOrders.filter(o => o.Status && o.Status !== "").length;
+            const pendingToday = todayOrders.length - processedToday;
+            
+            // Agent performance
+            const agentPerformance = AGENTS.map(agent => {
+                const agentOrders = state.allOrders.filter(o => o.AssignedAgent === agent);
+                const completed = agentOrders.filter(o => o.Status && o.Status !== "").length;
+                return {
+                    agent: agent,
+                    total: agentOrders.length,
+                    completed: completed,
+                    rate: agentOrders.length > 0 ? Math.round((completed / agentOrders.length) * 100) : 0
+                };
+            }).filter(a => a.total > 0)
+              .sort((a, b) => b.rate - a.rate);
+            
+            // Branch performance
+            const branchPerformance = BRANCHES.map(branch => {
+                const branchOrders = state.allOrders.filter(o => o.Branch === branch);
+                const pending = branchOrders.filter(o => !o.Status || o.Status === "").length;
+                return {
+                    branch: branch,
+                    total: branchOrders.length,
+                    pending: pending
+                };
+            }).filter(b => b.total > 0)
+              .sort((a, b) => b.pending - a.pending);
+            
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                        <h4>Today's Summary</h4>
+                        <p>• New Orders: <strong>${todayOrders.length}</strong></p>
+                        <p>• Processed Today: <strong>${processedToday}</strong></p>
+                        <p>• Pending Today: <strong>${pendingToday}</strong></p>
+                        <p>• Today's Rate: <strong>${todayOrders.length > 0 ? Math.round((processedToday / todayOrders.length) * 100) : 0}%</strong></p>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                        <h4>Top Performers</h4>
+                        ${agentPerformance.slice(0, 3).map(a => `
+                            <p>• ${a.agent}: ${a.rate}% (${a.completed}/${a.total})</p>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                        <h4>Branches Needing Attention</h4>
+                        ${branchPerformance.filter(b => b.pending > 0).slice(0, 3).map(b => `
+                            <p>• ${b.branch}: ${b.pending} pending</p>
+                        `).join('') || '<p>All branches are clear!</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateAgentList() {
+            const container = document.getElementById('agentList');
+            
+            const agentStats = AGENTS.map(agent => {
+                const agentOrders = state.allOrders.filter(o => o.AssignedAgent === agent);
+                const pending = agentOrders.filter(o => !o.Status || o.Status === "").length;
+                return {
+                    agent: agent,
+                    total: agentOrders.length,
+                    pending: pending
+                };
+            });
+            
+            container.innerHTML = agentStats.map(stat => `
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border);">
+                    <span>${stat.agent}</span>
+                    <span>
+                        <span class="agent-badge">${stat.total}</span>
+                        ${stat.pending > 0 ? `<span class="time-indicator time-warning" style="margin-left: 5px;">${stat.pending}</span>` : ''}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function updateBranchList() {
+            const container = document.getElementById('branchList');
+            
+            const branchStats = BRANCHES.map(branch => {
+                const branchOrders = state.allOrders.filter(o => o.Branch === branch);
+                const pending = branchOrders.filter(o => !o.Status || o.Status === "").length;
+                return {
+                    branch: branch,
+                    total: branchOrders.length,
+                    pending: pending
+                };
+            });
+            
+            container.innerHTML = branchStats.map(stat => `
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border);">
+                    <span>${stat.branch}</span>
+                    <span>
+                        <span class="status-badge">${stat.total}</span>
+                        ${stat.pending > 0 ? `<span class="time-indicator time-warning" style="margin-left: 5px;">${stat.pending}</span>` : ''}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function filterAdminOrders() {
+            updateAdminOrdersTable();
+        }
+
+        function refreshAnalytics() {
+            updateAdminAnalytics();
+            showToast('Analytics refreshed', 'success');
+        }
+
+        function saveAlertSettings() {
+            const followupTime = parseInt(document.getElementById('followupTime').value);
+            const criticalTime = parseInt(document.getElementById('criticalTime').value);
+            
+            if (followupTime >= criticalTime) {
+                showToast('Follow-up time must be less than critical time', 'danger');
+                return;
+            }
+            
+            state.systemSettings.followupTime = followupTime;
+            state.systemSettings.criticalTime = criticalTime;
+            
+            saveState();
+            showToast('Alert settings saved', 'success');
+            
+            // Refresh all dashboards
+            if (state.userRole === 'agent') refreshAgentDashboard();
+            else if (state.userRole === 'manager') refreshManagerDashboard();
+            else if (state.userRole === 'admin') refreshAdminDashboard();
+        }
+
+        function resetSystem() {
+            if (confirm('Reset system for new day? This will clear all assignments but keep data.')) {
+                state.allOrders = state.allOrders.map(order => ({
+                    ...order,
+                    AssignedAgent: '',
+                    UpdatedAt: null,
+                    UpdatedBy: ''
+                }));
+                
+                saveState();
+                refreshAdminDashboard();
+                showToast('System reset for new day', 'success');
+            }
+        }
+
+        function backupAllData() {
+            const backupData = {
+                orders: state.allOrders,
+                actions: state.actionLog,
+                settings: state.systemSettings,
+                timestamp: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            saveAs(blob, `system_backup_${new Date().toISOString().split('T')[0]}.json`);
+            
+            showToast('Complete system backup created', 'success');
+        }
+
+        function generateSystemReport() {
+            const reportData = {
+                summary: {
+                    totalOrders: state.allOrders.length,
+                    pendingOrders: state.allOrders.filter(o => !o.Status || o.Status === "").length,
+                    activeAgents: [...new Set(state.allOrders.map(o => o.AssignedAgent).filter(a => a))].length,
+                    totalActions: state.actionLog.length,
+                    generated: new Date().toISOString()
+                },
+                agentPerformance: AGENTS.map(agent => {
+                    const agentOrders = state.allOrders.filter(o => o.AssignedAgent === agent);
+                    const completed = agentOrders.filter(o => o.Status && o.Status !== "").length;
+                    return {
+                        agent: agent,
+                        assigned: agentOrders.length,
+                        completed: completed,
+                        pending: agentOrders.length - completed,
+                        rate: agentOrders.length > 0 ? Math.round((completed / agentOrders.length) * 100) : 0
+                    };
+                }),
+                branchSummary: BRANCHES.map(branch => {
+                    const branchOrders = state.allOrders.filter(o => o.Branch === branch);
+                    return {
+                        branch: branch,
+                        orders: branchOrders.length,
+                        pending: branchOrders.filter(o => !o.Status || o.Status === "").length
+                    };
+                })
+            };
+            
+            const dataStr = JSON.stringify(reportData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            saveAs(blob, `system_report_${new Date().toISOString().split('T')[0]}.json`);
+            
+            showToast('System report generated', 'success');
+        }
+
+        function manageAgents() {
+            // Simple agent management interface
+            const agentList = AGENTS.map(agent => 
+                `<option value="${agent}">${agent}</option>`
+            ).join('');
+            
+            const html = `
+                <div style="margin: 20px 0;">
+                    <h4>Manage Agents</h4>
+                    <select id="manageAgentSelect" style="width: 100%; padding: 10px; margin: 10px 0;">
+                        ${agentList}
+                    </select>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn btn-primary" onclick="viewAgentStats()">
+                            <i class="fas fa-chart-bar"></i> View Stats
+                        </button>
+                        <button class="btn btn-warning" onclick="reassignAgentOrders()">
+                            <i class="fas fa-user-friends"></i> Reassign Orders
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('analyticsContent').innerHTML = html;
+        }
+
+        function clearAllData() {
+            if (confirm('WARNING: This will clear ALL data! Are you sure?')) {
+                if (confirm('This cannot be undone. Type "DELETE" to confirm:')) {
+                    state.allOrders = [];
+                    state.actionLog = [];
+                    saveState();
+                    
+                    if (state.userRole === 'admin') refreshAdminDashboard();
+                    showToast('All data cleared', 'danger');
+                }
+            }
+        }
+
+        // ================= ORDER MANAGEMENT =================
+        function updateOrderStatus(orderId, status) {
+            if (state.userRole !== 'agent') {
+                showToast('Only agents can update order status', 'warning');
+                return;
+            }
+            
+            let reason = '';
+            if (status === 'Cancelled' || status === 'Delayed') {
+                reason = prompt(`Reason for ${status === 'Cancelled' ? 'cancellation' : 'delay'}:`);
+                if (reason === null || reason.trim() === '') {
+                    showToast('Reason is required', 'warning');
+                    return;
+                }
+                reason = reason.trim();
+            } else if (status === 'Delivered') {
+                reason = 'Delivered successfully';
+            }
+            
+            const orderIndex = state.allOrders.findIndex(o => o.OrderID === orderId);
+            if (orderIndex === -1) {
+                showToast('Order not found', 'danger');
+                return;
+            }
+            
+            const order = state.allOrders[orderIndex];
+            const oldStatus = order.Status || 'Pending';
+            
+            // Update order
+            order.Status = status;
+            order.UpdatedBy = state.currentUser;
+            order.UpdatedAt = new Date().getTime();
+            order.Reason = reason;
+            
+            // Add to action log
+            state.actionLog.push({
+                OrderID: orderId,
+                Action: `Status updated: ${oldStatus} → ${status}`,
+                Agent: state.currentUser,
+                Timestamp: new Date().toISOString(),
+                Details: reason,
+                Status: status,
+                AddedAt: new Date().getTime()
+            });
+            
+            saveState();
+            
+            // Update UI
+            if (state.userRole === 'agent') {
+                refreshAgentDashboard();
+            } else if (state.userRole === 'manager') {
+                refreshManagerDashboard();
+            }
+            
+            showToast(`Order ${orderId} marked as ${status}`, 'success');
+        }
+
+        function requestFollowup(orderId) {
+            const order = state.allOrders.find(o => o.OrderID === orderId);
+            if (!order) return;
+            
+            state.actionLog.push({
+                OrderID: orderId,
+                Action: 'Follow-up requested',
+                Agent: state.currentUser,
+                Timestamp: new Date().toISOString(),
+                Details: 'Agent requested follow-up for this order',
+                AddedAt: new Date().getTime()
+            });
+            
+            saveState();
+            showToast('Follow-up requested for order ' + orderId, 'warning');
+        }
+
+        function assignOrderToAgent(orderId, managerName) {
+            const order = state.allOrders.find(o => o.OrderID === orderId);
+            if (!order) return;
+            
+            const agent = prompt('Enter agent name to assign:');
+            if (!agent) return;
+            
+            if (!AGENTS.includes(agent)) {
+                if (!confirm(`"${agent}" is not in the agent list. Add as new agent?`)) {
+                    return;
+                }
+                AGENTS.push(agent);
+            }
+            
+            order.AssignedAgent = agent;
+            order.UpdatedBy = managerName;
+            order.UpdatedAt = new Date().getTime();
+            
+            state.actionLog.push({
+                OrderID: orderId,
+                Action: `Order assigned to ${agent}`,
+                Agent: managerName,
+                Timestamp: new Date().toISOString(),
+                Details: 'Manual assignment by manager',
+                AddedAt: new Date().getTime()
+            });
+            
+            saveState();
+            
+            if (state.userRole === 'manager') {
+                refreshManagerDashboard();
+            } else if (state.userRole === 'admin') {
+                refreshAdminDashboard();
+            }
+            
+            showToast(`Order ${orderId} assigned to ${agent}`, 'success');
+        }
+
+        function escalateOrder(orderId) {
+            const order = state.allOrders.find(o => o.OrderID === orderId);
+            if (!order) return;
+            
+            state.actionLog.push({
+                OrderID: orderId,
+                Action: 'Order escalated to manager',
+                Agent: state.currentUser,
+                Timestamp: new Date().toISOString(),
+                Details: 'Critical order requiring manager attention',
+                AddedAt: new Date().getTime()
+            });
+            
+            saveState();
+            showToast(`Order ${orderId} escalated`, 'warning');
+        }
+
+        function forceCompleteOrder(orderId) {
+            if (state.userRole !== 'admin') {
+                showToast('Admin access required', 'danger');
+                return;
+            }
+            
+            const order = state.allOrders.find(o => o.OrderID === orderId);
+            if (!order) return;
+            
+            order.Status = 'Completed';
+            order.UpdatedBy = 'Administrator';
+            order.UpdatedAt = new Date().getTime();
+            order.Reason = 'Force completed by admin';
+            
+            state.actionLog.push({
+                OrderID: orderId,
+                Action: 'Order force completed by admin',
+                Agent: 'Administrator',
+                Timestamp: new Date().toISOString(),
+                Details: 'Critical order force completed',
+                AddedAt: new Date().getTime()
+            });
+            
+            saveState();
+            refreshAdminDashboard();
+            showToast(`Order ${orderId} force completed`, 'success');
+        }
+
+        function reassignOrder(orderId) {
+            if (state.userRole !== 'admin') {
+                showToast('Admin access required', 'danger');
+                return;
+            }
+            
+            const order = state.allOrders.find(o => o.OrderID === orderId);
+            if (!order) return;
+            
+            const newAgent = prompt('Reassign to which agent?', order.AssignedAgent || '');
+            if (!newAgent) return;
+            
+            const oldAgent = order.AssignedAgent;
+            order.AssignedAgent = newAgent;
+            order.UpdatedBy = 'Administrator';
+            order.UpdatedAt = new Date().getTime();
+            
+            state.actionLog.push({
+                OrderID: orderId,
+                Action: `Order reassigned from ${oldAgent || 'Unassigned'} to ${newAgent}`,
+                Agent: 'Administrator',
+                Timestamp: new Date().toISOString(),
+                Details: 'Reassigned by admin',
+                AddedAt: new Date().getTime()
+            });
+            
+            saveState();
+            refreshAdminDashboard();
+            showToast(`Order ${orderId} reassigned to ${newAgent}`, 'success');
+        }
+
+        // ================= HELPER FUNCTIONS =================
+        function isOrderNeedsFollowup(order, agent) {
+            if (!order || order.Status && order.Status !== "") return false;
+            
+            const now = new Date().getTime();
+            const addedTime = order.AddedAt || new Date(order.OrderDate || Date.now()).getTime();
+            const minutesPassed = Math.floor((now - addedTime) / 60000);
+            
+            return minutesPassed >= state.systemSettings.followupTime;
+        }
+
+        function showAlertIfNeeded(count) {
+            const now = Date.now();
+            if (now - state.lastAlertTime < state.alertCooldown) return;
+            
+            if (count > 0) {
+                playAlert('warning');
+                state.lastAlertTime = now;
+            }
+        }
+
+        function showCriticalAlertIfNeeded(count) {
+            const now = Date.now();
+            if (now - state.lastAlertTime < state.alertCooldown) return;
+            
+            if (count > 0) {
+                playAlert('critical');
+                state.lastAlertTime = now;
+            }
+        }
+
+        function playAlert(type) {
+            try {
+                const audioId = type === 'critical' ? 'alertSound' : 'warningSound';
+                const audio = document.getElementById(audioId);
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("Audio play failed:", e));
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
+        }
+
+        function checkFollowUps() {
+            if (state.userRole === 'agent') {
+                checkAgentFollowUps();
+            } else if (state.userRole === 'manager') {
+                checkManagerFollowUps();
+            }
+        }
+
+        function autoRefreshDashboard() {
+            if (state.userRole === 'agent') {
+                refreshAgentDashboard();
+            } else if (state.userRole === 'manager') {
+                refreshManagerDashboard();
+            } else if (state.userRole === 'admin') {
+                refreshAdminDashboard();
+            }
+        }
+
+        // ================= FILE HANDLING =================
+        function downloadTemplate() {
+            const templateData = [
+                ["OrderID", "Customer", "OrderDate", "Total", "Branch", "Status", "AssignedAgent", "Reason"],
+                ["ORD-1001", "John Smith", new Date().toISOString(), 150.00, "Hamdan", "", "", ""],
+                ["ORD-1002", "Jane Doe", new Date().toISOString(), 89.99, "Khalidiyah", "Delivered", "Nirjala", "Delivered on time"]
+            ];
+            
+            const ws = XLSX.utils.aoa_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Orders");
+            XLSX.writeFile(wb, "Orders_Template.xlsx");
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            
+            reader.onerror = function() {
+                showToast("Error reading file. Please try again.", 'danger');
+            };
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    let jsonOrders = [];
+                    
+                    workbook.SheetNames.forEach(sheetName => {
+                        const sheet = workbook.Sheets[sheetName];
+                        const rows = XLSX.utils.sheet_to_json(sheet);
+                        jsonOrders = jsonOrders.concat(rows);
+                    });
+                    
+                    const newOrders = jsonOrders.map((row, index) => {
+                        // Helper to get value
+                        const getVal = (keys, defaultValue = '') => {
+                            for (let key of keys) {
+                                if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
+                                    return row[key];
+                                }
+                            }
+                            return defaultValue;
+                        };
+                        
+                        // Auto-assign agent if enabled
+                        let assignedAgent = getVal(['AssignedAgent', 'Agent', 'Assigned To'], '');
+                        if (!assignedAgent && state.systemSettings.autoAssign) {
+                            // Round-robin assignment
+                            assignedAgent = AGENTS[index % AGENTS.length];
+                        }
+                        
+                        return {
+                            OrderID: getVal(['OrderID', 'Order no', 'id', 'ID'], `ORD-${1000 + index + state.allOrders.length}`),
+                            Customer: getVal(['Customer', 'Cus. Name', 'Client'], 'Unknown Customer'),
+                            OrderDate: getVal(['OrderDate', 'Date', 'Time'], new Date().toISOString()),
+                            Total: parseFloat(getVal(['Total', 'Amount', 'Order Total'], 0)) || 0,
+                            Branch: getVal(['Branch', 'Outlet', 'Location'], BRANCHES[Math.floor(Math.random() * BRANCHES.length)]),
+                            Status: getVal(['Status', 'status', 'Order Status'], ''),
+                            AssignedAgent: assignedAgent,
+                            Reason: getVal(['Reason', 'Notes', 'Comment'], ''),
+                            AddedAt: new Date().getTime(),
+                            UpdatedAt: null,
+                            UpdatedBy: ''
+                        };
+                    });
+                    
+                    let addedCount = 0;
+                    newOrders.forEach(newOrder => {
+                        const existingIndex = state.allOrders.findIndex(o => o.OrderID === newOrder.OrderID);
+                        if (existingIndex === -1) {
+                            state.allOrders.push(newOrder);
+                            addedCount++;
+                        }
+                    });
+                    
+                    // Log import
+                    state.actionLog.push({
+                        OrderID: 'SYSTEM',
+                        Action: 'Data Import',
+                        Agent: state.currentUser,
+                        Timestamp: new Date().toISOString(),
+                        Details: `Imported ${addedCount} orders from ${file.name}`,
+                        AddedAt: new Date().getTime()
+                    });
+                    
+                    saveState();
+                    
+                    if (state.userRole === 'agent') {
+                        refreshAgentDashboard();
+                    } else if (state.userRole === 'manager') {
+                        refreshManagerDashboard();
+                    } else if (state.userRole === 'admin') {
+                        refreshAdminDashboard();
+                    }
+                    
+                    showToast(`Imported ${addedCount} orders`, 'success');
+                    
+                } catch (error) {
+                    showToast('Error processing file: ' + error.message, 'danger');
+                    console.error(error);
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleManagerFileUpload(event) {
+            handleFileUpload(event);
+        }
+
+        // ================= DEMO DATA =================
+        function loadDemoData() {
+            const demoOrders = [];
+            const now = new Date();
+            
+            // Create demo orders for each agent
+            AGENTS.forEach((agent, agentIndex) => {
+                const orderCount = 3 + Math.floor(Math.random() * 4); // 3-6 orders per agent
+                
+                for (let i = 1; i <= orderCount; i++) {
+                    const hoursAgo = Math.floor(Math.random() * 48); // Up to 48 hours ago
+                    const orderDate = new Date(now.getTime() - hoursAgo * 3600000);
+                    const statuses = ['', 'Delivered', 'Cancelled', 'Delayed'];
+                    const status = statuses[Math.floor(Math.random() * statuses.length)];
+                    const branch = BRANCHES[Math.floor(Math.random() * BRANCHES.length)];
+                    
+                    demoOrders.push({
+                        OrderID: `ORD-DEMO-${1000 + (agentIndex * 10) + i}`,
+                        Customer: `Customer ${agentIndex + 1}-${i}`,
+                        OrderDate: orderDate.toISOString(),
+                        Total: parseFloat((Math.random() * 200 + 20).toFixed(2)),
+                        Branch: branch,
+                        Status: status,
+                        AssignedAgent: agent,
+                        Reason: status === 'Delivered' ? 'Delivered successfully' : 
+                               status === 'Cancelled' ? 'Customer cancelled' : 
+                               status === 'Delayed' ? 'Delivery delayed' : '',
+                        AddedAt: orderDate.getTime(),
+                        UpdatedAt: status !== '' ? new Date(now.getTime() - Math.random() * hoursAgo * 3600000).getTime() : null,
+                        UpdatedBy: status !== '' ? agent : ''
+                    });
+                }
+            });
+            
+            // Add demo actions
+            const demoActions = [
+                {
+                    OrderID: 'ORD-DEMO-1001',
+                    Action: 'Order delivered successfully',
+                    Agent: 'Nirjala',
+                    Timestamp: new Date(now.getTime() - 2 * 3600000).toISOString(),
+                    Details: 'Customer satisfied',
+                    Status: 'Delivered',
+                    AddedAt: new Date(now.getTime() - 2 * 3600000).getTime()
+                },
+                {
+                    OrderID: 'ORD-DEMO-1003',
+                    Action: 'Order cancelled',
+                    Agent: 'manju ranabhat',
+                    Timestamp: new Date(now.getTime() - 1 * 3600000).toISOString(),
+                    Details: 'Customer requested cancellation',
+                    Status: 'Cancelled',
+                    AddedAt: new Date(now.getTime() - 1 * 3600000).getTime()
+                }
+            ];
+            
+            // Add to state
+            demoOrders.forEach(order => {
+                const existingIndex = state.allOrders.findIndex(o => o.OrderID === order.OrderID);
+                if (existingIndex === -1) {
+                    state.allOrders.push(order);
+                }
+            });
+            
+            demoActions.forEach(action => {
+                const existingIndex = state.actionLog.findIndex(a => 
+                    a.OrderID === action.OrderID && a.Action === action.Action
+                );
+                if (existingIndex === -1) {
+                    state.actionLog.push(action);
+                }
+            });
+            
+            saveState();
+        }
+
+        // ================= UTILITY FUNCTIONS =================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'check-circle',
+                warning: 'exclamation-triangle',
+                danger: 'times-circle',
+                info: 'info-circle',
+                manager: 'user-tie',
+                admin: 'user-shield'
+            };
+            
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+                    <i class="fas fa-${icons[type] || 'info-circle'}" style="color: var(--${type});"></i>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">${message}</div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: var(--text-gray); cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // Load state on start
+        loadStateFromStorage();
+    </script>
+</body>
+</html>
